@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5ef">
+  <meta name="description" content="Тренажёр основ Python для 7 класса ИТ-вертикали: типы данных, чтение, исправление и изменение кода, сопоставление. Таймер, отчёт и оценка.">
+  <title>Код с нуля — Python, 7 класс</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./js/python.js" defer></script>
+  <script src="./js/tasks.js" defer></script>
+  <script src="./js/core.js" defer></script>
+  <script src="./js/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">К основному содержимому</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="./" id="brand-link" aria-label="Код с нуля — главная">
+        <span class="brand-mark">py<span>_</span></span>
+        <span class="brand-text">код с нуля<span>ПРАКТИКА PYTHON</span></span>
+      </a>
+      <div id="home-header" class="header-right"><span class="header-tag"><span class="status-dot"></span> 7 класс · ИТ-вертикаль</span><button type="button" class="text-button" id="help-button">Как это работает <span aria-hidden="true">↗</span></button></div>
+      <div id="exam-header" class="header-right" hidden><span id="header-person" class="muted"></span><span class="header-tag"><span class="status-dot"></span> Работа идёт</span></div>
+      <div id="result-header" class="header-right" hidden><span class="header-tag"><span class="status-dot"></span> Работа завершена</span></div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section id="home-screen" class="screen home-screen">
+      <div id="resume-banner" class="resume-banner" hidden>
+        <div><strong id="resume-title">У вас есть незавершённая работа</strong><p id="resume-description"></p></div>
+        <div class="button-row"><button type="button" class="button primary small" id="resume-button">Продолжить</button><button type="button" class="button subtle small" id="discard-button">Удалить работу</button></div>
+      </div>
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="tiny-line"></span> PYTHON НАЧИНАЕТСЯ С ТЕБЯ.</div>
+          <h1>Пойми код.<br><span>Напиши свой.</span></h1>
+          <p class="hero-description">Числа, строки и первые программы. <br>Научись читать, исправлять и менять код —<br class="desktop-break"> шаг за шагом, от идеи до результата.</p>
+          <div class="hero-facts"><span><strong>12</strong> типов задач</span><span><strong>4</strong> формата ответа</span><span><strong>5</strong> баллов за результат</span></div>
+          <div class="python-visual" aria-label="Пример Python: переменная score равна 7, print(score + 3) выводит 10">
+            <div class="visual-top"><span>ТВОЯ ПЕРВАЯ ПРОГРАММА</span><span class="mono">hello.py</span></div>
+            <div class="hero-code"><div><span class="code-gutter">1</span><code>score <span>=</span> <b>7</b></code></div><div><span class="code-gutter">2</span><code><em>print</em>(score <span>+</span> <b>3</b>)</code></div></div>
+            <div class="hero-output"><span>РЕЗУЛЬТАТ</span><strong>10</strong><span>Всё начинается с одной строки. ↗</span></div>
+            <div class="type-chips"><span>int</span><span>float</span><span>str</span><span>bool</span><span>list</span></div>
+          </div>
+        </div>
+
+        <div class="start-card">
+          <div class="card-step">01 <span>/ НАЧАЛО РАБОТЫ</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+          <h2>Начни с малого. <br>Напиши больше.</h2>
+          <p class="muted start-subtitle">Представься и выбери формат тренировки.</p>
+          <form id="start-form">
+            <div class="two-columns"><label>Имя<input name="firstName" id="first-name" autocomplete="given-name" placeholder="Иван" maxlength="50" required></label><label>Фамилия<input name="lastName" id="last-name" autocomplete="family-name" placeholder="Иванов" maxlength="50" required></label></div>
+            <label>Класс<input name="className" id="class-name" autocomplete="off" placeholder="Например, 7 А" maxlength="50" required></label>
+            <div class="form-divider"></div>
+            <div class="two-columns"><label>Количество заданий<select id="question-count" name="count"><option value="8">8 заданий</option><option value="12" selected>12 заданий</option><option value="16">16 заданий</option><option value="24">24 задания</option></select></label><label>Время на работу<select id="duration" name="minutes"><option value="15">15 минут</option><option value="30" selected>30 минут</option><option value="45">45 минут</option><option value="60">60 минут</option></select></label></div>
+            <label class="switch-row"><span><strong>Полный экран</strong><small id="fullscreen-support">Помогает сосредоточиться на задачах</small></span><input type="checkbox" id="fullscreen-setting" checked><span class="switch" aria-hidden="true"></span></label>
+            <div class="monitor-note"><span class="icon" data-icon="shield"></span><p>Уходы со страницы фиксируются в отчёте.<br>Таймер продолжает идти при переключении.</p></div>
+            <p id="form-error" class="form-error" role="alert" hidden></p>
+            <button type="submit" class="button primary start-button">Начать тренировку <span aria-hidden="true">→</span></button>
+            <p class="local-note"><span class="icon" data-icon="lock"></span> Данные остаются в этом браузере</p>
+          </form>
+        </div>
+      </div>
+
+      <section class="topics-section" aria-labelledby="topics-heading">
+        <div class="section-heading"><h2 id="topics-heading">Три шага к своему коду</h2><span>ОТ ПОНЯТИЙ К ПРАКТИКЕ</span></div>
+        <div class="topic-cards">
+          <article class="topic-card"><div class="topic-top"><span class="topic-icon image-icon" data-icon="types"></span><span class="topic-number">01 / ТИПЫ ДАННЫХ</span></div><h3>У каждого значения — тип</h3><p>Числа, строки, логические значения <br>и списки. Функции и преобразования.</p><span class="topic-tag">4 типа задач</span></article>
+          <article class="topic-card"><div class="topic-top"><span class="topic-icon audio-icon" data-icon="code"></span><span class="topic-number">02 / ЧТЕНИЕ КОДА</span></div><h3>Посмотри глазами Python</h3><p>Определи вывод программы: <br>операции, строки, условия и индексы.</p><span class="topic-tag">4 типа задач</span></article>
+          <article class="topic-card"><div class="topic-top"><span class="topic-icon transfer-icon" data-icon="edit"></span><span class="topic-number">03 / ПИШЕМ КОД</span></div><h3>Исправь. Измени. Запусти.</h3><p>Найди ошибку и измени строку кода. <br>Проверь свою идею на примере.</p><span class="topic-tag">4 типа задач</span></article>
+        </div>
+      </section>
+      <section class="grade-strip" aria-labelledby="grade-heading"><div><span class="eyebrow">ПОНЯТНЫЙ РЕЗУЛЬТАТ</span><h2 id="grade-heading">Знаешь, к чему стремиться</h2><p>Учебная пятибалльная шкала. <br>Оценка зависит только от верных ответов.</p></div><div class="grade-scale"><div><b>5</b><span>85–100%</span></div><div><b>4</b><span>70–&lt;85%</span></div><div><b>3</b><span>50–&lt;70%</span></div><div><b>2</b><span>20–&lt;50%</span></div><div><b>1</b><span>0–&lt;20%</span></div></div></section>
+    </section>
+
+    <section id="exam-screen" class="screen exam-screen" aria-labelledby="exam-title" hidden>
+      <div class="exam-topline"><div><div class="eyebrow">ТВОЯ ПРАКТИКА</div><h1 id="exam-title">Сосредоточься на решении.</h1></div><button type="button" class="button outline small" id="fullscreen-button"><span class="icon" data-icon="expand"></span><span id="fullscreen-button-label">Во весь экран</span></button></div>
+      <div class="exam-grid">
+        <aside class="exam-sidebar">
+          <div class="timer-block"><span class="small-label">ОСТАЛОСЬ ВРЕМЕНИ</span><div class="timer" id="timer" role="timer" aria-label="Оставшееся время">30:00</div><div class="timer-track"><span id="timer-bar"></span></div><span id="timer-hint" class="muted">Хороший темп — твой темп.</span></div>
+          <div class="nav-block"><div class="nav-heading"><h2>Задания</h2><span id="answered-count">0 / 12</span></div><div id="question-nav" class="question-nav" aria-label="Навигация по заданиям"></div><div class="nav-legend"><span><i class="legend-dot answered-dot"></i>Есть ответ</span><span><i class="legend-dot flag-dot"></i>На потом</span></div></div>
+          <div class="monitor-block"><span class="status-dot"></span><span>Контроль активности</span><strong id="away-count">0</strong><p>Уходы и выходы из полного экрана будут видны в результате.</p></div>
+          <button type="button" class="button outline finish-button" id="finish-button">Завершить работу <span aria-hidden="true">↗</span></button>
+        </aside>
+        <div class="question-column"><article id="question-card" class="question-card"></article><div class="exam-footnote"><span class="icon" data-icon="save"></span><span id="save-status">Ответы сохраняются автоматически в этом браузере.</span></div><div class="unit-note">Python 3 · Регистр важен · Отсчёт индексов с нуля · В дробных числах — точка</div></div>
+      </div>
+    </section>
+
+    <section id="results-screen" class="screen results-screen" aria-labelledby="results-title" hidden></section>
+  </main>
+
+  <footer class="site-footer"><div><span class="footer-brand">код с нуля<span>_</span></span><span>Читай. Пробуй. Понимай.</span></div><span>7 класс · Основы Python · ИТ-вертикаль</span></footer>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <div class="sr-only" id="announcer" aria-live="polite"></div>
+  <dialog id="app-dialog" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog>
+  <noscript><div class="noscript">Для работы тренажёра включите JavaScript в настройках браузера.</div></noscript>
+</body>
+</html>

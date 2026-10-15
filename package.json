@@ -1,0 +1,11 @@
+{
+  "name": "python7-it-vertical-trainer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Основы Python для 7 класса ИТ-вертикали — статический тренажёр",
+  "scripts": {
+    "check": "node --check js/python.js && node --check js/tasks.js && node --check js/core.js && node --check js/app.js",
+    "test": "node --test tests/*.test.cjs"
+  },
+  "engines": {"node": ">=20"}
+}

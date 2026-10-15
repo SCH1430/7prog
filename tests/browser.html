@@ -1,0 +1,127 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="../favicon.svg"><title>Python — проверки интерфейса</title>
+<style>body{font:15px system-ui;margin:30px;color:#243c2c}button{padding:12px 20px}li{margin:12px 0}iframe{width:100%;height:650px;border:1px solid #ccc;margin-top:25px}</style>
+<h1>Проверки тренажёра Python</h1><p>Изолированные тестовые работы. Данные основной страницы не меняются.</p><button id="run">Запустить проверки</button><p id="status" role="status">Готово к запуску</p><ol id="results"></ol><iframe id="fixture" title="Тестовый тренажёр"></iframe>
+<script src="../js/python.js"></script><script src="../js/tasks.js"></script><script src="../js/core.js"></script>
+<script>
+const results=document.querySelector('#results'),frame=document.querySelector('#fixture');
+const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const assert=(v,msg)=>{if(!v)throw new Error(msg);};
+async function until(fn){for(let i=0;i<100;i++){if(fn())return;await pause(50);}throw new Error('Истекло ожидание');}
+function example(count=12,ago=0){return PythonCore.createSession({firstName:'Тест',lastName:'Автопроверка',className:'7 А'},count,15,42,Date.now()-ago);}
+async function mount(state,blocked=false){
+  const html=await(await fetch('../index.html')).text();
+  const base=new URL('../',location.href).href;
+  const boot=`<base href="${base}"><script>
+    let saved=${JSON.stringify(state?JSON.stringify(state):null)};
+    Object.defineProperty(window,'localStorage',{value:{getItem:()=>{${blocked?"throw new Error('blocked')":'return saved'}},setItem:(_,v)=>{${blocked?"throw new Error('blocked')":'saved=v'}},removeItem:()=>{saved=null;}}});
+    window.readTestState=()=>saved?JSON.parse(saved):null;
+    Object.defineProperty(navigator,'locks',{value:undefined});
+    Object.defineProperty(document,'fullscreenEnabled',{value:false});
+    Object.defineProperty(document,'hasFocus',{value:()=>true});
+    URL.createObjectURL=blob=>{window.testBlob=blob;return 'blob:test-report'};
+    URL.revokeObjectURL=()=>{};
+    HTMLAnchorElement.prototype.click=function(){window.testFilename=this.download};
+  <\/script>`;
+  frame.srcdoc=html.replace('<head>','<head>'+boot);
+  await new Promise(resolve=>frame.addEventListener('load',resolve,{once:true}));
+  return {doc:frame.contentDocument,win:frame.contentWindow};
+}
+function enter(doc,q,answer){
+  if(q.kind==='choice'){doc.querySelector(`input[name="choice"][value="${answer}"]`).click();}
+  else if(q.kind==='match'){for(const [id,value]of Object.entries(answer)){const el=doc.querySelector(`[data-pair="${id}"]`);el.value=value;el.dispatchEvent(new Event('change',{bubbles:true}));}}
+  else {const el=doc.querySelector('#answer-input');el.value=answer;el.dispatchEvent(new Event('input',{bubbles:true}));}
+}
+const checks=[
+  ['Все 4 формата: ввод, запуск кода, навигация, оценка 5, разбор, печать и отчёт',async()=>{
+    const s=example(),qs=PythonTasks.generateQuestions(s.count,s.seed);
+    const {doc,win}=await mount(s);
+    await until(()=>!doc.querySelector('#exam-screen').hidden);
+    for(let i=0;i<qs.length;i++){
+      const q=qs[i];
+      assert(doc.querySelector('#question-title').textContent===q.title,'Не то задание');
+      enter(doc,q,q.answer);
+      if(q.kind==='code'){
+        doc.querySelector('#run-code').click();
+        assert(doc.querySelector('#run-output').textContent===`Вывод программы:\n${q.sampleOutput}`,'Не совпал запуск примера');
+      }
+      assert(doc.querySelector('#answered-count').textContent===`${i+1} / 12`,'Неверный счётчик ответов');
+      doc.querySelector('#next-button').click();
+    }
+    assert(doc.querySelector('#app-dialog').open,'Нет подтверждения');
+    doc.querySelector('[data-dialog-action="1"]').click();
+    await until(()=>!doc.querySelector('#results-screen').hidden);
+    assert(doc.querySelector('.grade-circle strong').textContent==='5','Ожидалась 5');
+    assert(doc.querySelector('.score-ratio').textContent==='12/ 12','Не все ответы зачтены');
+    doc.querySelector('[data-filter="errors"]').click();
+    assert(doc.querySelectorAll('.review-item').length===0,'В разборе есть ошибки');
+    win.dispatchEvent(new Event('beforeprint'));
+    assert(doc.querySelectorAll('.review-item[open]').length===12,'Печать не раскрыла все ответы');
+    win.dispatchEvent(new Event('afterprint'));
+    doc.querySelector('#download-report').click();
+    const text=await win.testBlob.text();
+    assert(text.includes('Верно: 12 из 12'),'Отчёт без результата');
+    assert(text.includes('Исходный код:') && text.includes('Пример верного решения:'),'Отчёт без кода');
+    assert(!text.includes('[object Object]'),'Сопоставление не преобразовано в текст');
+    assert(win.testFilename.startsWith('Python7_'),'Неправильное имя отчёта');
+  }],
+  ['Неполное сопоставление, сохранение кода и флага, восстановление после перезагрузки',async()=>{
+    let s=example();const qs=PythonTasks.generateQuestions(s.count,s.seed);
+    const matchAt=qs.findIndex(q=>q.kind==='match'),codeAt=qs.findIndex(q=>q.kind==='code');
+    s.current=matchAt;
+    let {doc,win}=await mount(s);
+    await until(()=>!doc.querySelector('#exam-screen').hidden);
+    const q=qs[matchAt],first=q.pairs[0];
+    enter(doc,q,{[first.id]:q.answer[first.id]});
+    assert(doc.querySelector('#answered-count').textContent==='0 / 12','Неполные пары засчитаны');
+    doc.querySelector(`[data-question="${codeAt}"]`).click();
+    enter(doc,qs[codeAt],qs[codeAt].answer);
+    doc.querySelector('#flag-button').click();
+    s=win.readTestState();
+    ({doc,win}=await mount(s));
+    await until(()=>!doc.querySelector('#exam-screen').hidden);
+    assert(doc.querySelector('#answer-input').value===qs[codeAt].answer,'Код не восстановлен');
+    assert(doc.querySelector('#flag-button').getAttribute('aria-pressed')==='true','Флаг не восстановлен');
+    doc.querySelector(`[data-question="${matchAt}"]`).click();
+    assert(doc.querySelector(`[data-pair="${first.id}"]`).value===q.answer[first.id],'Пара не восстановлена');
+    assert(win.readTestState().deadline===s.deadline,'Таймер сброшен');
+  }],
+  ['Таймер закрывает подтверждение и выставляет оценку автоматически',async()=>{
+    const s=example(8,898700);s.lastSeenAt=Date.now();
+    s.answers=PythonTasks.generateQuestions(8,s.seed).map(q=>typeof q.answer==='object'?JSON.stringify(q.answer):q.answer);
+    const {doc}=await mount(s);
+    await until(()=>!doc.querySelector('#exam-screen').hidden);
+    doc.querySelector('#finish-button').click();
+    await until(()=>!doc.querySelector('#results-screen').hidden);
+    assert(doc.querySelector('.grade-circle strong').textContent==='5','Не сохранена оценка');
+    assert(doc.querySelector('.result-stats').textContent.includes('Время вышло'),'Нет причины завершения');
+    assert(!doc.querySelector('#app-dialog').open,'Диалог не закрыт');
+  }],
+  ['Журнал объединяет потерю фокуса и скрытие; выход из полного экрана учитывается отдельно',async()=>{
+    const {doc,win}=await mount(example());
+    await until(()=>!doc.querySelector('#exam-screen').hidden);
+    win.dispatchEvent(new Event('blur'));
+    Object.defineProperty(doc,'hidden',{configurable:true,value:true});doc.dispatchEvent(new Event('visibilitychange'));
+    assert(doc.querySelector('#away-count').textContent==='1','Уход посчитан дважды');
+    Object.defineProperty(doc,'hidden',{configurable:true,value:false});win.dispatchEvent(new Event('focus'));
+    Object.defineProperty(doc,'fullscreenElement',{configurable:true,value:doc.documentElement});doc.dispatchEvent(new Event('fullscreenchange'));
+    Object.defineProperty(doc,'fullscreenElement',{configurable:true,value:null});doc.dispatchEvent(new Event('fullscreenchange'));
+    doc.querySelector('#finish-button').click();doc.querySelector('[data-dialog-action="1"]').click();
+    assert(doc.querySelectorAll('.activity-table tbody tr').length===3,'Ожидались восстановление, уход и выход из полного экрана');
+  }],
+  ['Нет хранилища или Fullscreen API: тренажёр продолжает работать',async()=>{
+    const {doc}=await mount(null,true);
+    doc.querySelector('#first-name').value='Тест';doc.querySelector('#last-name').value='Проверка';doc.querySelector('#class-name').value='7 А';
+    doc.querySelector('.start-button').click();
+    await until(()=>!doc.querySelector('#exam-screen').hidden);
+    assert(doc.querySelector('#save-status').textContent.includes('недоступно'),'Нет сообщения о хранилище');
+    assert(doc.querySelector('#fullscreen-button').hidden,'Показан неподдерживаемый полный экран');
+    doc.querySelector('#finish-button').click();doc.querySelector('[data-dialog-action="1"]').click();
+    assert(doc.querySelector('.grade-circle strong').textContent==='1','Пустая работа должна получить 1');
+  }],
+];
+document.querySelector('#run').onclick=async()=>{
+  document.querySelector('#run').disabled=true;results.innerHTML='';document.querySelector('#status').textContent='Выполняются проверки…';let passed=0;
+  for(const [name,test]of checks){const li=document.createElement('li');results.append(li);try{await test();li.textContent='✓ '+name;passed++;}catch(e){li.textContent='✗ '+name+': '+e.message;li.style.color='#a23';}}
+  document.querySelector('#status').textContent=`Пройдено: ${passed} из ${checks.length}`;document.querySelector('#run').disabled=false;
+};
+</script></html>
